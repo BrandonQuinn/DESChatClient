@@ -1,18 +1,23 @@
 package quinn.deschat.encryption;
 
 import java.security.SecureRandom;
-import java.util.Random;
 
 /**
  * 
  * @author Brando
  *
- * Implementation according to FIPS 46-3 
+ * Implementation mostly according to FIPS 46-3 
  * https://csrc.nist.gov/files/pubs/fips/46-3/final/docs/fips46-3.pdf
  */
 public class DES {
 	
-	public static final int KEY_SIZE_BYTES = 8; // 64-bit (every 8th bit will be removed)
+	/**
+	 * Yes normally it's 64 bits and every 8th bit is removed, i'm just skipping
+	 * this. To me at least, if the key is random, then there's no benefit to removing
+	 * every 8th bit - that's creating order out of something that should be random,
+	 * it's still random. I just don't want to do that part.
+	 */
+	public static final int KEY_SIZE_BYTES = 7; // 56-bit
 	
 	// Initial permutation, applies to the initial 64-bit sized block
 	byte[][] IP = {
@@ -145,18 +150,45 @@ public class DES {
 	};
 	
 	public byte[] encrypt(String plaintext, byte[] key) {
+		byte[][] blocks = dividePlaintext(plaintext);
 		
 		return null;
 	}
 	
+	private initialPermutation(byte[] block) {
+		
+	}
+	
 	/**
-	 * Randomly generate a 64-bit byte array, that is 8 random bytes.
+	 * Break the plaintext down in to blocks of 64 bits.
+	 * @return
+	 */
+	byte[][] dividePlaintext(String plaintext) {
+		int numBlocks = plaintext.length() / 8;
+		if (numBlocks < 1) numBlocks = 1;
+		
+		byte[][] blocksInBytes = new byte[numBlocks][8];
+		
+		int s = 0;
+		for (int b = 0; b < numBlocks; b++) {
+			for (int i = 0; i < 8; i++) {
+				blocksInBytes[b][i] = (byte)(plaintext.charAt(s));
+				s++;
+				if (s == plaintext.length()) break;
+			}
+		}
+		
+		return blocksInBytes;
+	}
+	
+	/**
+	 * Randomly generate a 56-bit byte array, that is 7 random bytes.
 	 * @return
 	 */
 	public byte[] generateKey() {
 		SecureRandom random = new SecureRandom(); 
 		random.reseed();
-		byte[] K = new byte[8];
+		byte[] K = new byte[KEY_SIZE_BYTES];
 		random.nextBytes(K);
 		return K;
 	}
