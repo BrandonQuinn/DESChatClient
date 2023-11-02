@@ -6,7 +6,7 @@ import java.security.SecureRandom;
 
 /**
  * 
- * @author Brando
+ * @author Brandon Quinn
  *
  * Implementation mostly according to FIPS 46-3 
  * https://csrc.nist.gov/files/pubs/fips/46-3/final/docs/fips46-3.pdf
@@ -180,6 +180,23 @@ public class DES {
 	}
 	
 	/**
+	 * Expand the 32bit input to 48bits using the expansion table
+	 */
+	private byte[] expansion32bitsTo48bits(byte[] block) {
+		
+		// the permutation method will expand as well,
+		// just need to truncate the last 16 bits because the permutation method
+		// will return the full 64 bits of info
+		byte[] perm = permutation(block, eTable);
+		byte[] expandedBlock = new byte[6];
+		for (int i = 0; i < 6; i++) {
+			expandedBlock[i] = perm[i];
+		}
+		
+		return expandedBlock;
+	}
+	
+	/**
 	 * 
 	 * 
 	 * @param block
@@ -191,17 +208,17 @@ public class DES {
 		// convert the block in to a long
 		long blockToWorkOn = new BigInteger(block).longValue();
 		
-		// go through each element in the IP array
+		// go through each element in the permutation table
 		int bitToCopy = 0;
 		int setBit = block.length;
 		for (int x = 0, y = 0; x < permutation[0].length && y < permutation.length;) {
 			bitToCopy = permutation[y][x];
 			
 			// shift right to move the bit we want to copy to the end
-			long wipBlock = blockToWorkOn >> bitToCopy;
+			long bitToCopyAtLSB = blockToWorkOn >> bitToCopy;
 		
 			// check if the last bit is a 1 by doing an & operation with 1
-			long bitToApply = wipBlock & 1;
+			long bitToApply = bitToCopyAtLSB & 1;
 			
 			// move the bit to the location it needs to be in the result, and or it
 			// with the result
