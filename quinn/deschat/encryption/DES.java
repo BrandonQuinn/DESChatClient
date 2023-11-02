@@ -1,5 +1,7 @@
 package quinn.deschat.encryption;
 
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 
 /**
@@ -12,15 +14,15 @@ import java.security.SecureRandom;
 public class DES {
 	
 	/**
-	 * Yes normally it's 64 bits and every 8th bit is removed, i'm just skipping
-	 * this. To me at least, if the key is random, then there's no benefit to removing
+	 * Normally it's 64 bits and every 8th bit is removed, i'm just skipping
+	 * this. To me, if the key is random, then there's no benefit to removing
 	 * every 8th bit - that's creating order out of something that should be random,
 	 * it's still random. I just don't want to do that part.
 	 */
 	public static final int KEY_SIZE_BYTES = 7; // 56-bit
 	
 	// Initial permutation, applies to the initial 64-bit sized block
-	byte[][] IP = {
+	int[][] IP = {
 			{58, 50, 42, 34, 26, 18, 10, 2},
 			{60, 52, 44, 36, 28, 20, 12, 4},
 			{62, 54, 46, 38, 30, 22, 14, 6},
@@ -32,7 +34,7 @@ public class DES {
 	};
 	
 	// Inverse of the first permutation applied to the preoutput
-	byte[][] IPInverse = {
+	int[][] IPInverse = {
 			{40, 8, 48, 16, 56, 24, 64, 32},
 			{39, 7, 47, 15, 55, 23, 63, 31},
 			{38, 6, 46, 14, 54, 22, 62, 30},
@@ -58,7 +60,7 @@ public class DES {
 	
 	// P-Table
 	
-	byte[][] permutationTable = {
+	int[][] permutationTable = {
 			{16, 7, 20, 21},
 			{29, 12, 28, 17},
 			{1, 15, 23, 26},
@@ -149,21 +151,67 @@ public class DES {
 			{34, 53, 46, 42, 50, 36, 29, 32}
 	};
 	
-	public byte[] encrypt(String plaintext, byte[] key) {
+	public byte[] encrypt(final String plaintext, final byte[] key) {
+		assert (key.length == KEY_SIZE_BYTES);
+		
 		byte[][] blocks = dividePlaintext(plaintext);
+		
+		// go through each block and encrypt them
+		for (int i = 0; i < blocks.length; i++) {
+			byte[] encryptedBlock = encryptBlock(blocks[i]);
+		}
 		
 		return null;
 	}
 	
-	private initialPermutation(byte[] block) {
+	private byte[] encryptBlock(final byte[] block) {
+		initialPermutation(block);
 		
+		return null;
+	}
+	
+	private byte[] initialPermutation(final byte[] block) {
+		assert (block.length == 8);
+		
+		long result = 0x0000000000000000;
+
+		// convert the block in to a long
+		long blockToWorkOn = new BigInteger(block).longValue();
+		
+		// go through each element in the IP array
+		int bitToCopy = 0;
+		int setBit = 63;
+		for (int x = 0, y = 0; x < 8 && y < 8;) {
+			bitToCopy = IP[x][y];
+			
+			// shift the block right as many times the permutation says to get the
+			// least significant bit to be either the 1 or zero that was in that position in the block.
+			// everything is big-endian
+			long wipBlock = blockToWorkOn >> bitToCopy;
+		
+			// or the wipBlock with 1, if the result is 1 then create a new long,
+			// shift the 1 to the position and or it with the result
+			long bitToApply = wipBlock & 1;
+			bitToApply = bitToApply << setBit;
+			result = result | bitToApply;
+			
+			setBit --;
+			y++;
+			if (y == 8) {y = 0; x++;};
+			if (x == 8 && y == 8) break;
+		}
+		
+		// convert the resulting long in to a byte array
+		ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+		buffer.putLong(result);
+		return buffer.array();
 	}
 	
 	/**
 	 * Break the plaintext down in to blocks of 64 bits.
 	 * @return
 	 */
-	byte[][] dividePlaintext(String plaintext) {
+	byte[][] dividePlaintext(final String plaintext) {
 		int numBlocks = plaintext.length() / 8;
 		if (numBlocks < 1) numBlocks = 1;
 		

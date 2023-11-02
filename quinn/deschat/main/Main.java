@@ -7,6 +7,5 @@ public class Main {
 		DES des = new DES();
 		byte[] key = des.generateKey();
 		byte[] cipher = des.encrypt("This is a crazy message", key);
-		System.out.println(cipher);
 	}
 }
