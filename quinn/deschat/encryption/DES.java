@@ -186,16 +186,14 @@ public class DES {
 	 * @return
 	 */
 	private byte[] permutation(final byte[] block, final int[][] permutation) {
-		assert (block.length == 8);
-		
-		long result = 0x0000000000000000;
+		long result = 0;
 
 		// convert the block in to a long
 		long blockToWorkOn = new BigInteger(block).longValue();
 		
 		// go through each element in the IP array
 		int bitToCopy = 0;
-		int setBit = 64;
+		int setBit = block.length;
 		for (int x = 0, y = 0; x < permutation[0].length && y < permutation.length;) {
 			bitToCopy = permutation[y][x];
 			
@@ -212,8 +210,8 @@ public class DES {
 			
 			setBit --;
 			x++;
-			if (x == 8) {x = 0; y++;};
-			if (y == 8 && x == 8) break;
+			if (x == permutation[0].length) {x = 0; y++;};
+			if (y == permutation.length && x == permutation[0].length) break;
 		}
 		
 		// convert the resulting long in to a byte array
