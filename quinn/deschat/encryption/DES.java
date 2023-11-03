@@ -18,9 +18,7 @@ import java.security.SecureRandom;
 public class DES {
 	
 	/**
-	 * Normally it's 64 bits and every 8th bit is removed, i'm just skipping
-	 * this. Because i don't want to solve the problem of how to remove every 8th bit. Future me 
-	 * problem.
+	 * Skipping proper key generation and just setting it as 56 bits from the start
 	 */
 	public static final int KEY_SIZE_BYTES = 7; // 56-bit
 	
@@ -174,7 +172,15 @@ public class DES {
 	private byte[] encryptBlock(final byte[] block) {
 		permutation(block, IP);
 		
+		// split result
 		
+		// right in to function, key in to f
+		
+		//left in to xor
+		
+		// right from f in to xor with left
+		
+		//16 times
 		
 		return null;
 	}
@@ -185,12 +191,12 @@ public class DES {
 	private byte[] expansion32bitsTo48bits(byte[] block) {
 		
 		// the permutation method will expand as well,
-		// just need to truncate the last 16 bits because the permutation method
-		// will return the full 64 bits of info
+		// just need to truncate the first 16 bits because they're not used,
+		// permutation returns 64 bits
 		byte[] perm = permutation(block, eTable);
 		byte[] expandedBlock = new byte[6];
 		for (int i = 0; i < 6; i++) {
-			expandedBlock[i] = perm[i];
+			expandedBlock[i] = perm[i+2];
 		}
 		
 		return expandedBlock;
