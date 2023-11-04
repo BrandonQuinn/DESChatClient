@@ -156,6 +156,12 @@ public class DES {
 			{34, 53, 46, 42, 50, 36, 29, 32}
 	};
 	
+	/**
+	 * Encrypt the plaintext of arbitrary length (TODO: Implement padding and CBC).
+	 * @param plaintext
+	 * @param key
+	 * @return
+	 */
 	public byte[] encrypt(final String plaintext, final byte[] key) {
 		assert (key.length == KEY_SIZE_BYTES);
 		
@@ -164,10 +170,11 @@ public class DES {
 		// divide the plaintext in to blocks of 64 bits (byte array, 8 long)
 		// TODO: Add padding for plaintext that isn't long enough
 		byte[][] blocks = dividePlaintext(plaintext);
+		byte[][] encryptedBlocks = new byte[blocks.length][8];
 		
 		// go through each block and encrypt them
 		for (int i = 0; i < blocks.length; i++) {
-			byte[] encryptedBlock = encryptBlock(blocks[i]);
+			encryptedBlocks[i] = encryptBlock(blocks[i]);
 		}
 		
 		return null;
@@ -258,7 +265,7 @@ public class DES {
 	private byte[] leftHalfOf64BitBlock(byte[] block) {
 		assert (block.length == 8);
 		
-		byte[] result = new byte [block.length/2];
+		byte[] result = new byte [block.length >> 1];
 		
 		result[0] = block[0];
 		result[1] = block[1];
