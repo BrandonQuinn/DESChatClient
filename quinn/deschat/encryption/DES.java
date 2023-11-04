@@ -13,14 +13,20 @@ import java.security.SecureRandom;
  * 
  * Other references
  * https://en.wikipedia.org/wiki/DES_supplementary_material
+ * https://page.math.tu-berlin.de/~kant/teaching/hess/krypto-ws2006/des.htm
  * 
  */
 public class DES {
 	
 	/**
-	 * Skipping proper key generation and just setting it as 56 bits from the start
+	 * Size of key.
 	 */
-	public static final int KEY_SIZE_BYTES = 7; // 56-bit
+	public static final int KEY_SIZE_BYTES = 8; // 64-bit
+	
+	/**
+	 * Key, stored as it changes through the key generation method for each round
+	 */
+	private byte[] keyn;
 	
 	// Initial permutation, applies to the initial 64-bit sized block
 	int[][] IP = {
@@ -153,6 +159,10 @@ public class DES {
 	public byte[] encrypt(final String plaintext, final byte[] key) {
 		assert (key.length == KEY_SIZE_BYTES);
 		
+		keyn = key;
+		
+		// divide the plaintext in to blocks of 64 bits (byte array, 8 long)
+		// TODO: Add padding for plaintext that isn't long enough
 		byte[][] blocks = dividePlaintext(plaintext);
 		
 		// go through each block and encrypt them
@@ -170,26 +180,111 @@ public class DES {
 	 * @return
 	 */
 	private byte[] encryptBlock(final byte[] block) {
-		permutation(block, IP);
+		byte[] encryptedBlock;
 		
-		// split result
+		encryptedBlock = permutation(block, IP);
 		
-		// right in to function, key in to f
+		for (int r = 0; r < 16; r++) {
+			encryptedBlock = round(encryptedBlock);
+		}
 		
-		//left in to xor
+		// final permutation
+		encryptedBlock = permutation(encryptedBlock, IPInverse);
 		
-		// right from f in to xor with left
+		return encryptedBlock;
+	}
+	
+	private byte[] round(final byte[] block) {
+		// split the block in to 2 32bit blocks (L and R)
+		byte[] L = leftHalfOf64BitBlock(block);
+		byte[] R = rightHalfOf64BitBlock(block);
+		byte[] newR;
 		
-		//16 times
+		// send R in to f and kn into f
+		newR = XOR32bit(L, f(R, keyGen(keyn)));
+		
+		// XOR L and result of f
+		return join32bitBlocks(R, newR);
+	}
+	
+	/**
+	 * Simply combines 2 byte arrays of 4 bytes long and combines
+	 * them in to 1 8 byte array
+	 * @param L left
+	 * @param R right
+	 * @return 8 byte long array
+	 */
+	private byte[] join32bitBlocks(byte[] L, byte[] R) {
+		assert (L.length == 4 && R.length == 4);
+
+		byte[] result = new byte[8];
+		result[0] = L[0];
+		result[1] = L[1];
+		result[2] = L[2];
+		result[3] = L[3];
+
+		result[4] = L[0];
+		result[5] = L[1];
+		result[6] = L[2];
+		result[7] = L[3];
+
+		return result;
+	}
+
+	private byte[] XOR32bit(byte[] L, byte[] R) {
+		assert (L.length == 4 && R.length == 4);
+		
+		byte[] result = new byte[L.length];
+		
+		result[0] = (byte) (L[0] ^ R[0]);
+		result[1] = (byte) (L[1] ^ R[1]);
+		result[2] = (byte) (L[2] ^ R[2]);
+		result[3] = (byte) (L[3] ^ R[3]);
+		
+		return result;
+	}
+	
+	private byte[] f(final byte[] rBlock, final byte[] kn) {
+		assert (rBlock.length == 4 && kn.length == 8);
 		
 		return null;
+	}
+	
+	private byte[] keyGen(final byte[] keyn) {
+		
+		return null;
+	}
+	
+	private byte[] leftHalfOf64BitBlock(byte[] block) {
+		assert (block.length == 8);
+		
+		byte[] result = new byte [block.length/2];
+		
+		result[0] = block[0];
+		result[1] = block[1];
+		result[2] = block[2];
+		result[3] = block[3];
+		
+		return result;
+	}
+	
+	private byte[] rightHalfOf64BitBlock(byte[] block) {
+		assert (block.length == 8);
+		
+		byte[] result = new byte [block.length/2];
+		
+		result[0] = block[4];
+		result[1] = block[5];
+		result[2] = block[6];
+		result[3] = block[7];
+		
+		return result;
 	}
 	
 	/**
 	 * Expand the 32bit input to 48bits using the expansion table
 	 */
-	private byte[] expansion32bitsTo48bits(byte[] block) {
-		
+	private byte[] expansion32bitsTo48bits(final byte[] block) {
 		// the permutation method will expand as well,
 		// just need to truncate the first 16 bits because they're not used,
 		// permutation returns 64 bits
