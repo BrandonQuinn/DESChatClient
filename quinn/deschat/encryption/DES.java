@@ -158,6 +158,7 @@ public class DES {
 	
 	/**
 	 * Encrypt the plaintext of arbitrary length (TODO: Implement padding and CBC).
+	 * 
 	 * @param plaintext
 	 * @param key
 	 * @return
@@ -181,7 +182,8 @@ public class DES {
 	}
 	
 	/**
-	 * The actual encryption method.
+	 * The actual encryption method which encrypts a single 64bit blocks and
+	 * returns the 64bit. 
 	 * 
 	 * @param block
 	 * @return
@@ -201,6 +203,12 @@ public class DES {
 		return encryptedBlock;
 	}
 	
+	/**
+	 * The main function for a single round of the feistel structure.
+	 * 
+	 * @param block
+	 * @return
+	 */
 	private byte[] round(final byte[] block) {
 		// split the block in to 2 32bit blocks (L and R)
 		byte[] L = leftHalfOf64BitBlock(block);
@@ -216,7 +224,8 @@ public class DES {
 	
 	/**
 	 * Simply combines 2 byte arrays of 4 bytes long and combines
-	 * them in to 1 8 byte array
+	 * them in to 1 8 byte array.
+	 * 
 	 * @param L left
 	 * @param R right
 	 * @return 8 byte long array
@@ -238,7 +247,14 @@ public class DES {
 		return result;
 	}
 
-	private byte[] XOR32bit(byte[] L, byte[] R) {
+	/**
+	 * Exclusive OR of the Left and Right half of the input to the feistel structure.
+	 * 
+	 * @param L
+	 * @param R
+	 * @return
+	 */
+	private byte[] XOR32bit(final byte[] L, final byte[] R) {
 		assert (L.length == 4 && R.length == 4);
 		
 		byte[] result = new byte[L.length];
@@ -251,17 +267,58 @@ public class DES {
 		return result;
 	}
 	
+	/**
+	 * f function in each round that takes in the key and applies the substitution 
+	 * boxes.
+	 * 
+	 * @param rBlock
+	 * @param kn
+	 * @return
+	 */
 	private byte[] f(final byte[] rBlock, final byte[] kn) {
 		assert (rBlock.length == 4 && kn.length == 8);
 		
 		return null;
 	}
 	
+	/**
+	 * Generates the new key for each round.
+	 * 
+	 * @param keyn
+	 * @return
+	 */
 	private byte[] keyGen(final byte[] keyn) {
 		
 		return null;
 	}
 	
+	/**
+	 * Takes in a 64-bit (8 byte) long array and removes every 8th bit
+	 * returning a 56-bit (7 byte) long array.
+	 * 
+	 * @param key
+	 * @return
+	 */
+	private byte[] parityBitDrop(final byte[] key) {
+		assert (key.length == 0 && key != null);
+
+		int currentBitOfCurrentByte = 4;
+		int resultByteIndex = 0;
+		int resultByteBitIndex = 0;
+		byte[] result = new byte[7];
+
+		for (int i = 0; i < key.length; i++) {
+			// move from left to right of each byte, check if 
+			// each bit is a 1 or a 0 and move it in to the new byte array
+			// skip the 8th bit of each byte (where currentBitOfCurrentByte == 0)
+			byte currentByte = key[i];
+			
+			
+		}
+
+		return result;
+	}
+
 	private byte[] leftHalfOf64BitBlock(byte[] block) {
 		assert (block.length == 8);
 		
